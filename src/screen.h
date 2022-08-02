@@ -1,0 +1,13 @@
+void data_labels (WINDOW *window);
+void data_values (WINDOW *window, unsigned int *values);
+void mode_label (WINDOW *window);
+void mode_value (WINDOW *window, unsigned int value);
+void pc_label (WINDOW *window);
+void pc_value (WINDOW *window, unsigned int pc);
+void ram_labels (WINDOW *window);
+void ram_values (WINDOW *window, unsigned int *values);
+void registers_labels (WINDOW *window);
+void registers_values (WINDOW *window, unsigned int *values);
+void text_labels (WINDOW *window);
+void text_values (WINDOW *window, unsigned int *values);
+int kbhit ();

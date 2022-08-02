@@ -1,0 +1,26 @@
+unsigned int rs_assembler (char *token);
+unsigned int rt_assembler (char *token);
+unsigned int rd_assembler (char *token);
+unsigned int r_assembler (char *assy);
+unsigned int sllsrl_assembler (char *assy);
+unsigned int jr_assembler (char *assy);
+unsigned int i_assembler (char *assy);
+unsigned int lwsw_assembler (char *assy);
+unsigned int j_assembler (char *assy);
+unsigned int assembler (char *assy);
+int mips_load_word (unsigned int rs, unsigned int rt, unsigned int offset, unsigned int *registers, unsigned int *data);
+void mips_store_word ();
+void mips_branch_on_equal (unsigned int *pc, unsigned int rs, unsigned int rt, int offset, unsigned int *registers);
+void mips_add (unsigned int rs, unsigned int rt, unsigned int rd, unsigned int *registers); //adds rs and rt, storing this sum in rd
+void mips_add_immediate (unsigned int rs, unsigned int rt, int immediate, unsigned int *registers);
+void mips_sub (unsigned int rs, unsigned int rt, unsigned int rd, unsigned int *registers);
+void mips_and ();
+void mips_or ();
+void mips_nor ();
+void mips_set_on_less_than (unsigned int rs, unsigned int rt, unsigned int rd, unsigned int *registers);
+void mips_jump ();
+void mips_jump_register ();
+void mips_shift_left ();
+void mips_shift_right ();
+int cycle (unsigned int *pc, unsigned int *op, unsigned int *rs, unsigned int *rt, unsigned int *rd, unsigned int *target, int *immediate, unsigned int *shamt, unsigned int *funct, int *offset, unsigned int *data, unsigned int *registers, unsigned int *text);
+int step (unsigned int *pc, unsigned int *op, unsigned int *rs, unsigned int *rt, unsigned int *rd, unsigned int *target, int *immediate, unsigned int *shamt, unsigned int *funct, int *offset, unsigned int *data, unsigned int *registers, unsigned int *text);
