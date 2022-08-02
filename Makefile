@@ -10,14 +10,20 @@ SUBMITNAME=tiagodiasferreira.zip
 
 all: $(BIN)/$(NAME)
 
-debug: CFLAGS=-g3 -Wall
+debug: CFLAGS=-g3 -Wall -pedantic -lncurses -ltinfo
 debug: $(BIN)/$(NAME)
 
-$(BIN)/$(NAME): $(OBJS)
+$(BIN)/$(NAME): $(OBJS) | $(BIN)
 	$(CC) $(CFLAGS) $(OBJS) -o $(BIN)/$(NAME)
 
-$(OBJ)/%.o: $(SRC)/%.c
+$(OBJ)/%.o: $(SRC)/%.c | $(OBJ)
 	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ):
+	mkdir -p $(OBJ)
+
+$(BIN):
+	mkdir -p $(BIN)
 
 clean:
 	$(RM) -r main $(BIN)/* $(OBJ)/* $(SUBMITNAME)
