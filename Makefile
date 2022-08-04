@@ -1,5 +1,6 @@
 CC=gcc
-CFLAGS=-g0 -Wall -pedantic -O3 -lncurses -ltinfo
+CFLAGS=-g0 -Wall -pedantic -O3
+LDFLAGS=-lpanel -lncurses -ltinfo
 SRC=src
 OBJ=obj
 SRCS=$(wildcard $(SRC)/*.c)
@@ -14,7 +15,7 @@ debug: CFLAGS=-g3 -Wall -pedantic -lncurses -ltinfo
 debug: $(BIN)/$(NAME)
 
 $(BIN)/$(NAME): $(OBJS) | $(BIN)
-	$(CC) $(CFLAGS) $(OBJS) -o $(BIN)/$(NAME)
+	$(CC) $(CFLAGS) $(OBJS) -o $(BIN)/$(NAME) $(LDFLAGS)
 
 $(OBJ)/%.o: $(SRC)/%.c | $(OBJ)
 	$(CC) $(CFLAGS) -c $< -o $@
