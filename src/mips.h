@@ -22,5 +22,5 @@ void mips_jump ();
 void mips_jump_register ();
 void mips_shift_left ();
 void mips_shift_right ();
-int cycle (unsigned int *pc, unsigned int *op, unsigned int *rs, unsigned int *rt, unsigned int *rd, unsigned int *target, int *immediate, unsigned int *shamt, unsigned int *funct, int *offset, unsigned int *data, unsigned int *registers, unsigned int *text);
-int step (unsigned int *pc, unsigned int *op, unsigned int *rs, unsigned int *rt, unsigned int *rd, unsigned int *target, int *immediate, unsigned int *shamt, unsigned int *funct, int *offset, unsigned int *data, unsigned int *registers, unsigned int *text);
+int cycle (unsigned int *cycle_count, unsigned int *pc, unsigned int *op, unsigned int *rs, unsigned int *rt, unsigned int *rd, unsigned int *target, int *immediate, unsigned int *shamt, unsigned int *funct, int *offset, unsigned int *data, unsigned int *registers, unsigned int *text);
+int step (unsigned int *cycle_count, unsigned int *pc, unsigned int *op, unsigned int *rs, unsigned int *rt, unsigned int *rd, unsigned int *target, int *immediate, unsigned int *shamt, unsigned int *funct, int *offset, unsigned int *data, unsigned int *registers, unsigned int *text);

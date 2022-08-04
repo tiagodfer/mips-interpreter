@@ -1,30 +1,41 @@
 #include <ncurses.h>
 #include "screen.h"
+#include "constants.h"
+
+void cycle_label (WINDOW *window) {
+    mvwprintw(window, 0, 3, "%s", "CYCLES");
+}
+
+void cycle_value (WINDOW *window, unsigned int value) {
+    mvwprintw(window, 1, 2, "%8X", value);
+}
 
 void data_labels (WINDOW *window) {
-    mvwprintw(window, 0, 7, "DATA");
-    mvwprintw(window, 1, 1, "0");
-    mvwprintw(window, 2, 1, "4");
-    mvwprintw(window, 3, 1, "8");
-    mvwprintw(window, 4, 1, "C");
-    mvwprintw(window, 5, 1, "10");
-    mvwprintw(window, 6, 1, "14");
-    mvwprintw(window, 7, 1, "18");
-    mvwprintw(window, 8, 1, "1C");
-    mvwprintw(window, 9, 1, "20");
-    mvwprintw(window, 10, 1, "24");
-    mvwprintw(window, 11, 1, "28");
-    mvwprintw(window, 12, 1, "2C");
-    mvwprintw(window, 13, 1, "30");
-    mvwprintw(window, 14, 1, "34");
-    mvwprintw(window, 15, 1, "38");
-    mvwprintw(window, 16, 1, "3C");
-    mvwprintw(window, 17, 1, "40");
-    mvwprintw(window, 18, 1, "44");
-    mvwprintw(window, 19, 1, "48");
-    mvwprintw(window, 20, 1, "4C");
-    mvwprintw(window, 21, 1, "50");
-    mvwprintw(window, 22, 1, "54");
+    mvwprintw(window, 0, 7, ".DATA");
+    mvwprintw(window, 1, 1, "%-8s", "0");
+    mvwprintw(window, 2, 1, "%-8s", "4");
+    mvwprintw(window, 3, 1, "%-8s", "8");
+    mvwprintw(window, 4, 1, "%-8s", "C");
+    mvwprintw(window, 5, 1, "%-8s", "10");
+    mvwprintw(window, 6, 1, "%-8s", "14");
+    mvwprintw(window, 7, 1, "%-8s", "18");
+    mvwprintw(window, 8, 1, "%-8s", "1C");
+    mvwprintw(window, 9, 1, "%-8s", "20");
+    mvwprintw(window, 10, 1, "%-8s", "24");
+    mvwprintw(window, 11, 1, "%-8s", "28");
+    mvwprintw(window, 12, 1, "%-8s", "2C");
+    mvwprintw(window, 13, 1, "%-8s", "30");
+    mvwprintw(window, 14, 1, "%-8s", "34");
+    mvwprintw(window, 15, 1, "%-8s", "38");
+    mvwprintw(window, 16, 1, "%-8s", "3C");
+    /*
+    mvwprintw(window, 17, 1, "%-8s", "40");
+    mvwprintw(window, 18, 1, "%-8s", "44");
+    mvwprintw(window, 19, 1, "%-8s", "48");
+    mvwprintw(window, 20, 1, "%-8s", "4C");
+    mvwprintw(window, 21, 1, "%-8s", "50");
+    mvwprintw(window, 22, 1, "%-8s", "54");
+    */
 }
 
 void data_values (WINDOW *window, unsigned int *values) {
@@ -44,12 +55,14 @@ void data_values (WINDOW *window, unsigned int *values) {
     mvwprintw(window, 14, 10, "%8X", values[13]);
     mvwprintw(window, 15, 10, "%8X", values[14]);
     mvwprintw(window, 16, 10, "%8X", values[15]);
+    /*
     mvwprintw(window, 17, 10, "%8X", values[16]);
     mvwprintw(window, 18, 10, "%8X", values[17]);
     mvwprintw(window, 19, 10, "%8X", values[18]);
     mvwprintw(window, 20, 10, "%8X", values[19]);
     mvwprintw(window, 21, 10, "%8X", values[20]);
     mvwprintw(window, 22, 10, "%8X", values[21]);
+    */
 }
 
 void mode_label (WINDOW *window) {
@@ -57,66 +70,88 @@ void mode_label (WINDOW *window) {
 }
 
 void mode_value (WINDOW *window, unsigned int value) {
-    mvwprintw(window, 1, 10, "%s", "default");
+    switch (value) {
+        case 0:
+            mvwprintw(window, 1, 1, "%23s", "      DIRECT-4B1W      ");
+            break;
+        case 1:
+            mvwprintw(window, 1, 1, "%23s", "  2W-ASSOCIATIVE-4B1W  ");
+            break;
+        case 2:
+            mvwprintw(window, 1, 1, "%23s", "  2W-ASSOCIATIVE-4B4W  ");
+            break;
+        case 3:
+            mvwprintw(window, 1, 1, "%23s", "  2W-ASSOCIATIVE-2B4W  ");
+            break;
+        case 4:
+            mvwprintw(window, 1, 1, "%23s", "  2W-ASSOCIATIVE-1B4W  ");
+            break;
+    }
 }
 
 void pc_label (WINDOW *window) {
-    mvwprintw(window, 0, 12, "%s", "PC");
+    mvwprintw(window, 0, 5, "%s", "PC");
 }
 
 void pc_value (WINDOW *window, unsigned int value) {
-    mvwprintw(window, 1, 10, "%8X", value);
+    mvwprintw(window, 1, 2, "%8X", value);
 }
 
-void ram_labels (WINDOW *window) {
+void ram_labels (WINDOW *window, unsigned int scroll) {
     mvwprintw(window, 0, 8, "RAM");
-    mvwprintw(window, 1, 1, "0");
-    mvwprintw(window, 2, 1, "4");
-    mvwprintw(window, 3, 1, "8");
-    mvwprintw(window, 4, 1, "C");
-    mvwprintw(window, 5, 1, "10");
-    mvwprintw(window, 6, 1, "14");
-    mvwprintw(window, 7, 1, "18");
-    mvwprintw(window, 8, 1, "1C");
-    mvwprintw(window, 9, 1, "20");
-    mvwprintw(window, 10, 1, "24");
-    mvwprintw(window, 11, 1, "28");
-    mvwprintw(window, 12, 1, "2C");
-    mvwprintw(window, 13, 1, "30");
-    mvwprintw(window, 14, 1, "34");
-    mvwprintw(window, 15, 1, "38");
-    mvwprintw(window, 16, 1, "3C");
-    mvwprintw(window, 17, 1, "40");
-    mvwprintw(window, 18, 1, "44");
-    mvwprintw(window, 19, 1, "48");
-    mvwprintw(window, 20, 1, "4C");
-    mvwprintw(window, 21, 1, "50");
-    mvwprintw(window, 22, 1, "54");
+    if (scroll) {
+        mvwprintw(window, 0, 5, "/\\");
+    }
+    if (scroll < (RAM_SIZE - 0x54)) {
+        mvwprintw(window, 0, 12, "\\/");
+    }
+    mvwprintw(window, 1, 1, "%-8X", scroll);
+    mvwprintw(window, 2, 1, "%-8X", scroll + 0x4);
+    mvwprintw(window, 3, 1, "%-8X", scroll + 0x8);
+    mvwprintw(window, 4, 1, "%-8X", scroll + 0xC);
+    mvwprintw(window, 5, 1, "%-8X", scroll + 0x10);
+    mvwprintw(window, 6, 1, "%-8X", scroll + 0x14);
+    mvwprintw(window, 7, 1, "%-8X", scroll + 0x18);
+    mvwprintw(window, 8, 1, "%-8X", scroll + 0x1C);
+    mvwprintw(window, 9, 1, "%-8X", scroll + 0x20);
+    mvwprintw(window, 10, 1, "%-8X", scroll + 0x24);
+    mvwprintw(window, 11, 1, "%-8X", scroll + 0x28);
+    mvwprintw(window, 12, 1, "%-8X", scroll + 0x2C);
+    mvwprintw(window, 13, 1, "%-8X", scroll + 0x30);
+    mvwprintw(window, 14, 1, "%-8X", scroll + 0x34);
+    mvwprintw(window, 15, 1, "%-8X", scroll + 0x38);
+    mvwprintw(window, 16, 1, "%-8X", scroll + 0x3C);
+    mvwprintw(window, 17, 1, "%-8X", scroll + 0x40);
+    mvwprintw(window, 18, 1, "%-8X", scroll + 0x44);
+    mvwprintw(window, 19, 1, "%-8X", scroll + 0x48);
+    mvwprintw(window, 20, 1, "%-8X", scroll + 0x4C);
+    mvwprintw(window, 21, 1, "%-8X", scroll + 0x50);
+    mvwprintw(window, 22, 1, "%-8X", scroll + 0x54);
 }
 
-void ram_values (WINDOW *window, unsigned int *values) {
-    mvwprintw(window, 1, 10, "%8X", values[0]);
-    mvwprintw(window, 2, 10, "%8X", values[1]);
-    mvwprintw(window, 3, 10, "%8X", values[2]);
-    mvwprintw(window, 4, 10, "%8X", values[3]);
-    mvwprintw(window, 5, 10, "%8X", values[4]);
-    mvwprintw(window, 6, 10, "%8X", values[5]);
-    mvwprintw(window, 7, 10, "%8X", values[6]);
-    mvwprintw(window, 8, 10, "%8X", values[7]);
-    mvwprintw(window, 9, 10, "%8X", values[8]);
-    mvwprintw(window, 10, 10, "%8X", values[9]);
-    mvwprintw(window, 11, 10, "%8X", values[10]);
-    mvwprintw(window, 12, 10, "%8X", values[11]);
-    mvwprintw(window, 13, 10, "%8X", values[12]);
-    mvwprintw(window, 14, 10, "%8X", values[13]);
-    mvwprintw(window, 15, 10, "%8X", values[14]);
-    mvwprintw(window, 16, 10, "%8X", values[15]);
-    mvwprintw(window, 17, 10, "%8X", values[16]);
-    mvwprintw(window, 18, 10, "%8X", values[17]);
-    mvwprintw(window, 19, 10, "%8X", values[18]);
-    mvwprintw(window, 20, 10, "%8X", values[19]);
-    mvwprintw(window, 21, 10, "%8X", values[20]);
-    mvwprintw(window, 22, 10, "%8X", values[21]);
+void ram_values (WINDOW *window, unsigned int *values, unsigned int scroll) {
+    mvwprintw(window, 1, 10, "%8X", values[scroll + 0]);
+    mvwprintw(window, 2, 10, "%8X", values[scroll + 1]);
+    mvwprintw(window, 3, 10, "%8X", values[scroll + 2]);
+    mvwprintw(window, 4, 10, "%8X", values[scroll + 3]);
+    mvwprintw(window, 5, 10, "%8X", values[scroll + 4]);
+    mvwprintw(window, 6, 10, "%8X", values[scroll + 5]);
+    mvwprintw(window, 7, 10, "%8X", values[scroll + 6]);
+    mvwprintw(window, 8, 10, "%8X", values[scroll + 7]);
+    mvwprintw(window, 9, 10, "%8X", values[scroll + 8]);
+    mvwprintw(window, 10, 10, "%8X", values[scroll + 9]);
+    mvwprintw(window, 11, 10, "%8X", values[scroll + 10]);
+    mvwprintw(window, 12, 10, "%8X", values[scroll + 11]);
+    mvwprintw(window, 13, 10, "%8X", values[scroll + 12]);
+    mvwprintw(window, 14, 10, "%8X", values[scroll + 13]);
+    mvwprintw(window, 15, 10, "%8X", values[scroll + 14]);
+    mvwprintw(window, 16, 10, "%8X", values[scroll + 15]);
+    mvwprintw(window, 17, 10, "%8X", values[scroll + 16]);
+    mvwprintw(window, 18, 10, "%8X", values[scroll + 17]);
+    mvwprintw(window, 19, 10, "%8X", values[scroll + 18]);
+    mvwprintw(window, 20, 10, "%8X", values[scroll + 19]);
+    mvwprintw(window, 21, 10, "%8X", values[scroll + 20]);
+    mvwprintw(window, 22, 10, "%8X", values[scroll + 21]);
 }
 
 void registers_labels (WINDOW *window) {
@@ -191,29 +226,31 @@ void registers_values (WINDOW *window, unsigned int *values) {
 }
 
 void text_labels (WINDOW *window) {
-    mvwprintw(window, 0, 7, "TEXT");
-    mvwprintw(window, 1, 1, "0");
-    mvwprintw(window, 2, 1, "4");
-    mvwprintw(window, 3, 1, "8");
-    mvwprintw(window, 4, 1, "C");
-    mvwprintw(window, 5, 1, "10");
-    mvwprintw(window, 6, 1, "14");
-    mvwprintw(window, 7, 1, "18");
-    mvwprintw(window, 8, 1, "1C");
-    mvwprintw(window, 9, 1, "20");
-    mvwprintw(window, 10, 1, "24");
-    mvwprintw(window, 11, 1, "28");
-    mvwprintw(window, 12, 1, "2C");
-    mvwprintw(window, 13, 1, "30");
-    mvwprintw(window, 14, 1, "34");
-    mvwprintw(window, 15, 1, "38");
-    mvwprintw(window, 16, 1, "3C");
-    mvwprintw(window, 17, 1, "40");
-    mvwprintw(window, 18, 1, "44");
-    mvwprintw(window, 19, 1, "48");
-    mvwprintw(window, 20, 1, "4C");
-    mvwprintw(window, 21, 1, "50");
-    mvwprintw(window, 22, 1, "54");
+    mvwprintw(window, 0, 7, ".TEXT");
+    mvwprintw(window, 1, 1, "%-8s", "0");
+    mvwprintw(window, 2, 1, "%-8s", "4");
+    mvwprintw(window, 3, 1, "%-8s", "8");
+    mvwprintw(window, 4, 1, "%-8s", "C");
+    mvwprintw(window, 5, 1, "%-8s", "10");
+    mvwprintw(window, 6, 1, "%-8s", "14");
+    mvwprintw(window, 7, 1, "%-8s", "18");
+    mvwprintw(window, 8, 1, "%-8s", "1C");
+    mvwprintw(window, 9, 1, "%-8s", "20");
+    mvwprintw(window, 10, 1, "%-8s", "24");
+    mvwprintw(window, 11, 1, "%-8s", "28");
+    mvwprintw(window, 12, 1, "%-8s", "2C");
+    mvwprintw(window, 13, 1, "%-8s", "30");
+    mvwprintw(window, 14, 1, "%-8s", "34");
+    mvwprintw(window, 15, 1, "%-8s", "38");
+    mvwprintw(window, 16, 1, "%-8s", "3C");
+    /*
+    mvwprintw(window, 17, 1, "%-8s", "40");
+    mvwprintw(window, 18, 1, "%-8s", "44");
+    mvwprintw(window, 19, 1, "%-8s", "48");
+    mvwprintw(window, 20, 1, "%-8s", "4C");
+    mvwprintw(window, 21, 1, "%-8s", "50");
+    mvwprintw(window, 22, 1, "%-8s", "54");
+    */
 }
 
 void text_values (WINDOW *window, unsigned int *values) {
@@ -233,12 +270,14 @@ void text_values (WINDOW *window, unsigned int *values) {
     mvwprintw(window, 14, 10, "%8X", values[13]);
     mvwprintw(window, 15, 10, "%8X", values[14]);
     mvwprintw(window, 16, 10, "%8X", values[15]);
+    /*
     mvwprintw(window, 17, 10, "%8X", values[16]);
     mvwprintw(window, 18, 10, "%8X", values[17]);
     mvwprintw(window, 19, 10, "%8X", values[18]);
     mvwprintw(window, 20, 10, "%8X", values[19]);
     mvwprintw(window, 21, 10, "%8X", values[20]);
     mvwprintw(window, 22, 10, "%8X", values[21]);
+    */
 }
 
 int kbhit () {
@@ -254,4 +293,35 @@ int kbhit () {
     }
     nodelay(stdscr, FALSE);
     return r;
+}
+
+void refresh_windows (WINDOW *cycle_window, unsigned int cycle_count, WINDOW *data_window, unsigned int *data, WINDOW *mode_window, unsigned int mode, WINDOW *pc_window, unsigned int pc, WINDOW *ram_window, unsigned int *ram, unsigned int scroll, WINDOW *registers_window, unsigned int *registers, WINDOW *text_window, unsigned int *text) {
+    box(cycle_window, 0, 0);
+    box(data_window, 0, 0);
+    box(mode_window, 0, 0);
+    box(pc_window, 0, 0);
+    box(ram_window, 0, 0);
+    box(registers_window, 0, 0);
+    box(text_window, 0, 0);
+    cycle_label(cycle_window);
+    cycle_value(cycle_window, cycle_count);
+    data_labels(data_window);
+    data_values(data_window, data);
+    mode_label(mode_window);
+    mode_value(mode_window, mode);
+    pc_label(pc_window);
+    pc_value(pc_window, pc);
+    ram_labels(ram_window, scroll);
+    ram_values(ram_window, ram, scroll);
+    registers_labels(registers_window);
+    registers_values(registers_window, registers);
+    text_labels(text_window);
+    text_values(text_window, text);
+    wrefresh(cycle_window);
+    wrefresh(data_window);
+    wrefresh(mode_window);
+    wrefresh(pc_window);
+    wrefresh(ram_window);
+    wrefresh(registers_window);
+    wrefresh(text_window);
 }

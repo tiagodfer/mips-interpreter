@@ -394,7 +394,7 @@ void mips_shift_left () {
 void mips_shift_right () {
 }
 
-int cycle (unsigned int *pc, unsigned int *op, unsigned int *rs, unsigned int *rt, unsigned int *rd, unsigned int *target, int *immediate, unsigned int *shamt, unsigned int *funct, int *offset, unsigned int *data, unsigned int *registers, unsigned int *text) {
+int cycle (unsigned int *cycle_count, unsigned int *pc, unsigned int *op, unsigned int *rs, unsigned int *rt, unsigned int *rd, unsigned int *target, int *immediate, unsigned int *shamt, unsigned int *funct, int *offset, unsigned int *data, unsigned int *registers, unsigned int *text) {
     int locked = 0;
     unsigned int op_mask = 0xFC000000;
     unsigned int rs_mask = 0x3E00000;
@@ -430,6 +430,7 @@ int cycle (unsigned int *pc, unsigned int *op, unsigned int *rs, unsigned int *r
             *rd = mc & rd_mask;
             *rd = *rd >> 11;
             mips_add(*rs, *rt, *rd, registers);
+            (*cycle_count)++;
         } else if (*funct == 0x22) {
             *rs = mc & rs_mask;
             *rs = *rs >> 21;
@@ -438,6 +439,7 @@ int cycle (unsigned int *pc, unsigned int *op, unsigned int *rs, unsigned int *r
             *rd = mc & rd_mask;
             *rd = *rd >> 11;
             mips_sub(*rs, *rt, *rd, registers);
+            (*cycle_count)++;
         } else if (*funct == 0x2A) {
             *rs = mc & rs_mask;
             *rs = *rs >> 21;
@@ -446,10 +448,12 @@ int cycle (unsigned int *pc, unsigned int *op, unsigned int *rs, unsigned int *r
             *rd = mc & rd_mask;
             *rd = *rd >> 11;
             mips_set_on_less_than(*rs, *rt, *rd, registers);
+            (*cycle_count)++;
         }
     } else if (*op == 0x8000000) {
         *target = mc & target_mask;
         mips_jump(pc, *target);
+        (*cycle_count)++;
     } else if (*op == 0x10000000) {
         *rs = mc & rs_mask;
         *rs = *rs >> 21;
@@ -457,6 +461,7 @@ int cycle (unsigned int *pc, unsigned int *op, unsigned int *rs, unsigned int *r
         *rt = *rt >> 16;
         *offset = mc & offset_mask;
         mips_branch_on_equal(pc, *rs, *rt, *offset, registers);
+        (*cycle_count)++;
     } else if (*op == 0x20000000) {
         *rs = mc & rs_mask;
         *rs = *rs >> 21;
@@ -464,6 +469,7 @@ int cycle (unsigned int *pc, unsigned int *op, unsigned int *rs, unsigned int *r
         *rt = *rt >> 16;
         *immediate = mc & immediate_mask;
         mips_add_immediate(*rs, *rt, *immediate, registers);
+        (*cycle_count)++;
     } else if (*op == 0x8C000000) {
         *rs = mc & rs_mask;
         *rs = *rs >> 21;
@@ -471,11 +477,12 @@ int cycle (unsigned int *pc, unsigned int *op, unsigned int *rs, unsigned int *r
         *rt = *rt >> 16;
         *offset = mc & offset_mask;
         locked = mips_load_word(*rs, *rt, *offset, registers, data);
+        *cycle_count += 51;
     }
     return locked;
 }
 
-int step (unsigned int *pc, unsigned int *op, unsigned int *rs, unsigned int *rt, unsigned int *rd, unsigned int *target, int *immediate, unsigned int *shamt, unsigned int *funct, int *offset, unsigned int *data, unsigned int *registers, unsigned int *text) {
-    int locked = cycle(pc, op, rs, rt, rd, target, immediate, shamt, funct, offset, data, registers, text);
+int step (unsigned int *cycle_count, unsigned int *pc, unsigned int *op, unsigned int *rs, unsigned int *rt, unsigned int *rd, unsigned int *target, int *immediate, unsigned int *shamt, unsigned int *funct, int *offset, unsigned int *data, unsigned int *registers, unsigned int *text) {
+    int locked = cycle(cycle_count, pc, op, rs, rt, rd, target, immediate, shamt, funct, offset, data, registers, text);
     return locked;
 }

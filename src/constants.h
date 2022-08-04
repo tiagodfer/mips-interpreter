@@ -1,4 +1,4 @@
 #define LENGHT 100
-#define TEXT_SIZE 22
-#define DATA_SIZE 22
-#define RAM_SIZE 22
+#define TEXT_SIZE 16
+#define DATA_SIZE 16
+#define RAM_SIZE 1024
