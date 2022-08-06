@@ -23,13 +23,14 @@
 #include "constants.h"
 
 int main () {
-    unsigned int counter = 0;
+    unsigned int ram_count = 0;
     FILE *file = NULL;
     char assy[LENGHT] = "\0";
     int input;
     int locked = 0;
     unsigned int cycle_count = 0x0;
     unsigned int mc = 0x0;
+<<<<<<< HEAD
     unsigned int op = 0x0;
     unsigned int rs = 0x0;
     unsigned int rt = 0x0;
@@ -40,11 +41,15 @@ int main () {
     unsigned int funct = 0x0;
     int offset = 0x0;
     unsigned int data[DATA_SIZE] = {0x0}; 
+=======
+    unsigned int data[DATA_SIZE] = {0x0};
+>>>>>>> 55d7d3f1584c5e57eb050b323e18e3af5b0985e1
     unsigned int data_info[DATA_SIZE] = {0x0};
     unsigned int mode = 0;
     unsigned int pc = 0x0;
     unsigned int ram[RAM_SIZE] = {0x0};
     unsigned int ram_info[RAM_SIZE] = {0x0};
+    unsigned int ram_start = 0x0;
     unsigned int registers[32] = {0x0};
     unsigned int text[TEXT_SIZE] = {0x0};
     unsigned int text_info[TEXT_SIZE] = {0x0};
@@ -68,46 +73,41 @@ int main () {
         if (kbhit()) {
             input = getch(); //whats for user input, returns char value of that key
             switch (input) {
+                // load
                 case 'l':
                     file = file_read();
                     if (file) {
                         locked = 0;
                         pc = 0;
-                        counter = 0;
+                        ram_count = 0;
                         while (fscanf(file, " %[^\n]", assy) != EOF) {
                             if (!strcmp(assy, ".TEXT")) {
                                 while (fscanf(file, " %[^\n]", assy) != EOF && strcmp(assy, ".DATA")) {
                                     mc = assembler(assy);
-                                    ram[counter] = mc;
-                                    ram_info[counter] = 0x1100 + counter;
-                                    counter++;
+                                    ram[ram_count] = mc;
+                                    ram_info[ram_count] = 0x10000000;
+                                    ram_count++;
                                 }
                             }
                             if (!strcmp(assy, ".DATA")) {
+                                if (ram_count % 4) {
+                                    ram_count += 4 - ram_count % 4;
+                                }
+                                ram_start = ram_count;
                                 while (fscanf(file, " %[^\n]", assy) != EOF && strcmp(assy, ".TEXT")) {
-                                    ram[counter] = strtol(assy, NULL, 10);
-                                    ram_info[counter] = 0x2100 + counter;
-                                    counter++;
+                                    ram[ram_count] = strtol(assy, NULL, 10);
+                                    ram_info[ram_count] = 0x20000000;
+                                    ram_count++;
                                 }
                             }
                         }
                     }
-                    switch (mode) {
-                        case 0:
-                            break;
-                        case 1:
-                            break;
-                        case 2:
-                            break;
-                        case 3:
-                            break;
-                        case 4:
-                            break;
-                    }
                     refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text);
                     break;
+                // run
                 case 'r':
                     break;
+                // step
                 case 's':
                     if (locked) {
                         WINDOW *error_window = newwin(5, 35, 10, 25);
@@ -120,10 +120,12 @@ int main () {
                         wrefresh(error_window);
                         delwin(error_window);
                     } else {
-                        locked = step(&cycle_count, &pc, &op, &rs, &rt, &rd, &target, &immediate, &shamt, &funct, &offset, data, registers, text);
+                        fetch(&pc, mode, ram, ram_info, data, data_info, text, text_info);
+                        locked = decode_execute(mode, &cycle_count, &pc, registers, text, text_info, data, data_info, ram, ram_info, ram_start);
                     }
                     refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text);
                     break;
+                // reset
                 case 't':
                     locked = 0;
                     pc = 0;
@@ -141,24 +143,31 @@ int main () {
                     }
                     refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text);
                     break;
+                // mode
                 case 'm':
                     mode += 1;
                     if (mode >= 5) {
                         mode = 0;
                     }
                     refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text);
+                // up
                 case KEY_UP:
                     if (scroll > 0) {
                         scroll -= 4;
                         refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text);
                     }
                     break;
+                // down
                 case KEY_DOWN:
                     if (scroll < (RAM_SIZE - 0x54)) {
                         scroll += 4;
                         refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text);
                     }
                     break;
+                // for debugging purposes
+                case 'd':
+                        refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram_info, scroll, registers_window, registers, text_window, text);
+                        break;
             }
         }
     }

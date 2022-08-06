@@ -3,7 +3,7 @@ ADDI $T7 $R0 4
 LW $T0 0 $T6
 LW $T1 0 $T7
 SLT $T2 $T0 $T1
-BEQ $T2 $R0 8
+BEQ $T2 $R0 4
 ADD $T6 $T7 $R0
 ADDI $T7 $T7 4
 J 4

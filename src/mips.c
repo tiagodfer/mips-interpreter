@@ -324,23 +324,39 @@ unsigned int assembler (char *assy) {
     return mc;
 }
 
-int mips_load_word (unsigned int rs, unsigned int rt, unsigned int offset, unsigned int *registers, unsigned int *data) {
+int mips_load_word (unsigned int mode, unsigned int rs, unsigned int rt, unsigned int offset, unsigned int *registers, unsigned int *data, unsigned int *data_info, unsigned int *ram, unsigned int *ram_info, unsigned int ram_start) {
     int locked = 0;
-    int address = (registers[rs] + (offset << 2)) >> 2;
-    if (address >= RAM_SIZE || address < 0) {
-        WINDOW *error_window = newwin(5, 35, 10, 25);
-        refresh();
-        box(error_window, 0, 0);
-        mvwprintw(error_window, 2, 10, "Invalid address!");
-        wrefresh(error_window);
-        wgetch(error_window);
-        wclear(error_window);
-        wrefresh(error_window);
-        delwin(error_window);
-        locked = 1;
-    } else {
-        registers[rt] = data[(registers[rs] + (offset << 2)) >> 2];
+    unsigned int row_mask   = 0x3;
+    unsigned int tag_mask   = 0x3F;
+    unsigned int valid_mask = 0x10000000;
+    unsigned int info_row = ((registers[rs] + offset) >> 4) & row_mask;
+    unsigned int tag = ((registers[rs] + offset) >> 6) & tag_mask;
+    unsigned int data_row = info_row << 2;
+    switch (mode) {
+        case 0:
+            if ((ram_start + (((registers[rs] + offset) >> 4) << 2) + 3) > (RAM_SIZE >> 2)) {
+                WINDOW *error_window = newwin(5, 35, 10, 25);
+                refresh();
+                box(error_window, 0, 0);
+                mvwprintw(error_window, 2, 10, "Invalid address!");
+                wrefresh(error_window);
+                wgetch(error_window);
+                wclear(error_window);
+                wrefresh(error_window);
+                delwin(error_window);
+                locked = 1;
+            } else if (!(data_info[info_row] & valid_mask) || !((data_info[info_row] & tag_mask) == tag)) {
+                data[data_row] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2)];
+                data[data_row + 1] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2) + 1];
+                data[data_row + 2] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2) + 2];
+                data[data_row + 3] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2) + 3];
+                data_info[info_row] = 0x0;
+                data_info[info_row] |= valid_mask;
+                data_info[info_row] |= tag;
+            }
+            break;
     }
+    registers[rt] = data[((registers[rs] + offset) >> 2) % 16];
     return locked;
 }
 
@@ -349,7 +365,7 @@ void mips_store_word () {
 
 void mips_branch_on_equal (unsigned int *pc, unsigned int rs, unsigned int rt, int offset, unsigned int *registers) {
     if (registers[rs] == registers[rt]) {
-        pc += offset - 4;
+        *pc += offset;
     }
 }
 
@@ -375,7 +391,7 @@ void mips_nor () {
 }
 
 void mips_set_on_less_than (unsigned int rs, unsigned int rt, unsigned int rd, unsigned int *registers) {
-    registers[rd] = rs < rt;
+    registers[rd] = registers[rs] < registers[rt];
 }
 
 void mips_jump (unsigned int *pc, unsigned int target) {
@@ -394,8 +410,38 @@ void mips_shift_left () {
 void mips_shift_right () {
 }
 
-int cycle (unsigned int *cycle_count, unsigned int *pc, unsigned int *op, unsigned int *rs, unsigned int *rt, unsigned int *rd, unsigned int *target, int *immediate, unsigned int *shamt, unsigned int *funct, int *offset, unsigned int *data, unsigned int *registers, unsigned int *text) {
+void fetch (unsigned int *pc, unsigned int mode, unsigned int *ram, unsigned int *ram_info, unsigned int *data, unsigned int *data_info, unsigned int *text, unsigned int *text_info) {
+    unsigned int row_mask   = 0x3;
+    unsigned int tag_mask   = 0x3F;
+    unsigned int valid_mask = 0x10000000;
+    unsigned int info_row = (*pc >> 4) & row_mask;
+    unsigned int tag = (*pc >> 6) & tag_mask;
+    unsigned int text_row = info_row << 2;
+    switch (mode) {
+        case 0:
+            if (!(text_info[info_row] & valid_mask) || !((text_info[info_row] & tag_mask) == tag)) {
+                text[text_row] = ram[(*pc >> 2)];
+                text[text_row + 1] = ram[(*pc >> 2) + 1];
+                text[text_row + 2] = ram[(*pc >> 2) + 2];
+                text[text_row + 3] = ram[(*pc >> 2) + 3];
+                text_info[info_row] |= valid_mask;
+                text_info[info_row] |= tag;
+            }
+            break;
+    }
+}
+
+int decode_execute (unsigned int mode, unsigned int *cycle_count, unsigned int *pc, unsigned int *registers, unsigned int *text, unsigned int *text_info, unsigned int *data, unsigned int *data_info, unsigned int *ram, unsigned int *ram_info, unsigned int ram_start) {
     int locked = 0;
+    unsigned int op = 0x0;
+    unsigned int rs = 0x0;
+    unsigned int rt = 0x0;
+    unsigned int rd = 0x0;
+    unsigned int target = 0x0;
+    int immediate = 0x0;
+    unsigned int shamt = 0x0;
+    unsigned int funct = 0x0;
+    int offset = 0x0;
     unsigned int op_mask = 0xFC000000;
     unsigned int rs_mask = 0x3E00000;
     unsigned int rt_mask = 0x1F0000;
@@ -407,10 +453,17 @@ int cycle (unsigned int *cycle_count, unsigned int *pc, unsigned int *op, unsign
     unsigned int mc = text[*pc >> 2]; 
     *pc += 4;
 
+<<<<<<< HEAD
     *op = mc & op_mask;
     if (*op == 0x0) {
         *funct = mc & funct_mask; // example: A & 9 = 1010 & 1001 = 1000 ou 8
         if (*funct == 0x0) {
+=======
+    op = mc & op_mask;
+    if (op == 0x0) {
+        funct = mc & funct_mask;
+        if (funct == 0x0) {
+>>>>>>> 55d7d3f1584c5e57eb050b323e18e3af5b0985e1
             WINDOW *nop_window = newwin(5, 35, 10, 25);
             refresh();
             box(nop_window, 0, 0);
@@ -422,67 +475,62 @@ int cycle (unsigned int *cycle_count, unsigned int *pc, unsigned int *op, unsign
             delwin(nop_window);
             locked = 1;
             return locked;
-        } else if (*funct == 0x20) {
-            *rs = mc & rs_mask;
-            *rs = *rs >> 21;
-            *rt = mc & rt_mask;
-            *rt = *rt >> 16;
-            *rd = mc & rd_mask;
-            *rd = *rd >> 11;
-            mips_add(*rs, *rt, *rd, registers);
+        } else if (funct == 0x20) {
+            rs = mc & rs_mask;
+            rs = rs >> 21;
+            rt = mc & rt_mask;
+            rt = rt >> 16;
+            rd = mc & rd_mask;
+            rd = rd >> 11;
+            mips_add(rs, rt, rd, registers);
             (*cycle_count)++;
-        } else if (*funct == 0x22) {
-            *rs = mc & rs_mask;
-            *rs = *rs >> 21;
-            *rt = mc & rt_mask;
-            *rt = *rt >> 16;
-            *rd = mc & rd_mask;
-            *rd = *rd >> 11;
-            mips_sub(*rs, *rt, *rd, registers);
+        } else if (funct == 0x22) {
+            rs = mc & rs_mask;
+            rs = rs >> 21;
+            rt = mc & rt_mask;
+            rt = rt >> 16;
+            rd = mc & rd_mask;
+            rd = rd >> 11;
+            mips_sub(rs, rt, rd, registers);
             (*cycle_count)++;
-        } else if (*funct == 0x2A) {
-            *rs = mc & rs_mask;
-            *rs = *rs >> 21;
-            *rt = mc & rt_mask;
-            *rt = *rt >> 16;
-            *rd = mc & rd_mask;
-            *rd = *rd >> 11;
-            mips_set_on_less_than(*rs, *rt, *rd, registers);
+        } else if (funct == 0x2A) {
+            rs = mc & rs_mask;
+            rs = rs >> 21;
+            rt = mc & rt_mask;
+            rt = rt >> 16;
+            rd = mc & rd_mask;
+            rd = rd >> 11;
+            mips_set_on_less_than(rs, rt, rd, registers);
             (*cycle_count)++;
         }
-    } else if (*op == 0x8000000) {
-        *target = mc & target_mask;
-        mips_jump(pc, *target);
+    } else if (op == 0x8000000) {
+        target = mc & target_mask;
+        mips_jump(pc, target);
         (*cycle_count)++;
-    } else if (*op == 0x10000000) {
-        *rs = mc & rs_mask;
-        *rs = *rs >> 21;
-        *rt = mc & rt_mask;
-        *rt = *rt >> 16;
-        *offset = mc & offset_mask;
-        mips_branch_on_equal(pc, *rs, *rt, *offset, registers);
+    } else if (op == 0x10000000) {
+        rs = mc & rs_mask;
+        rs = rs >> 21;
+        rt = mc & rt_mask;
+        rt = rt >> 16;
+        offset = mc & offset_mask;
+        mips_branch_on_equal(pc, rs, rt, offset, registers);
         (*cycle_count)++;
-    } else if (*op == 0x20000000) {
-        *rs = mc & rs_mask;
-        *rs = *rs >> 21;
-        *rt = mc & rt_mask;
-        *rt = *rt >> 16;
-        *immediate = mc & immediate_mask;
-        mips_add_immediate(*rs, *rt, *immediate, registers);
+    } else if (op == 0x20000000) {
+        rs = mc & rs_mask;
+        rs = rs >> 21;
+        rt = mc & rt_mask;
+        rt = rt >> 16;
+        immediate = mc & immediate_mask;
+        mips_add_immediate(rs, rt, immediate, registers);
         (*cycle_count)++;
-    } else if (*op == 0x8C000000) {
-        *rs = mc & rs_mask;
-        *rs = *rs >> 21;
-        *rt = mc & rt_mask;
-        *rt = *rt >> 16;
-        *offset = mc & offset_mask;
-        locked = mips_load_word(*rs, *rt, *offset, registers, data);
+    } else if (op == 0x8C000000) {
+        rs = mc & rs_mask;
+        rs = rs >> 21;
+        rt = mc & rt_mask;
+        rt = rt >> 16;
+        offset = mc & offset_mask;
+        locked = mips_load_word(mode, rs, rt, offset, registers, data, data_info, ram, ram_info, ram_start);
         *cycle_count += 51;
     }
-    return locked;
-}
-
-int step (unsigned int *cycle_count, unsigned int *pc, unsigned int *op, unsigned int *rs, unsigned int *rt, unsigned int *rd, unsigned int *target, int *immediate, unsigned int *shamt, unsigned int *funct, int *offset, unsigned int *data, unsigned int *registers, unsigned int *text) {
-    int locked = cycle(cycle_count, pc, op, rs, rt, rd, target, immediate, shamt, funct, offset, data, registers, text);
     return locked;
 }
