@@ -404,12 +404,12 @@ int cycle (unsigned int *cycle_count, unsigned int *pc, unsigned int *op, unsign
     unsigned int immediate_mask = 0xFFFF;
     unsigned int funct_mask = 0x3F;
     unsigned int offset_mask = 0xFFFF;
-    unsigned int mc = text[*pc >> 2];
+    unsigned int mc = text[*pc >> 2]; 
     *pc += 4;
 
     *op = mc & op_mask;
     if (*op == 0x0) {
-        *funct = mc & funct_mask;
+        *funct = mc & funct_mask; // example: A & 9 = 1010 & 1001 = 1000 ou 8
         if (*funct == 0x0) {
             WINDOW *nop_window = newwin(5, 35, 10, 25);
             refresh();
