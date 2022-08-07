@@ -324,39 +324,118 @@ unsigned int assembler (char *assy) {
     return mc;
 }
 
-int mips_load_word (unsigned int mode, unsigned int rs, unsigned int rt, unsigned int offset, unsigned int *registers, unsigned int *data, unsigned int *data_info, unsigned int *ram, unsigned int *ram_info, unsigned int ram_start) {
+int mips_load_word (unsigned int *cycle_count, unsigned int mode, unsigned int rs, unsigned int rt, unsigned int offset, unsigned int *registers, unsigned int *data, unsigned int *data_info, unsigned int *ram, unsigned int *ram_info, unsigned int ram_start) {
     int locked = 0;
-    unsigned int row_mask   = 0x3;
-    unsigned int tag_mask   = 0x3F;
-    unsigned int valid_mask = 0x10000000;
-    unsigned int info_row = ((registers[rs] + offset) >> 4) & row_mask;
-    unsigned int tag = ((registers[rs] + offset) >> 6) & tag_mask;
-    unsigned int data_row = info_row << 2;
-    switch (mode) {
-        case 0:
-            if ((ram_start + (((registers[rs] + offset) >> 4) << 2) + 3) > (RAM_SIZE >> 2)) {
-                WINDOW *error_window = newwin(5, 35, 10, 25);
-                refresh();
-                box(error_window, 0, 0);
-                mvwprintw(error_window, 2, 10, "Invalid address!");
-                wrefresh(error_window);
-                wgetch(error_window);
-                wclear(error_window);
-                wrefresh(error_window);
-                delwin(error_window);
-                locked = 1;
-            } else if (!(data_info[info_row] & valid_mask) || !((data_info[info_row] & tag_mask) == tag)) {
+    if (mode == 0) {
+        unsigned int row_mask   = 0x3;
+        unsigned int tag_mask   = 0x3F;
+        unsigned int valid_mask = 0x10000000;
+        unsigned int info_row = ((registers[rs] + offset) >> 4) & row_mask;
+        unsigned int tag = ((registers[rs] + offset) >> 6) & tag_mask;
+        unsigned int data_row = info_row << 2;
+        if ((ram_start + (((registers[rs] + offset) >> 4) << 2) + 3) > (RAM_SIZE >> 2)) {
+            WINDOW *error_window = newwin(5, 35, 10, 25);
+            refresh();
+            box(error_window, 0, 0);
+            mvwprintw(error_window, 2, 10, "Invalid address!");
+            wrefresh(error_window);
+            wgetch(error_window);
+            wclear(error_window);
+            wrefresh(error_window);
+            delwin(error_window);
+            locked = 1;
+        } else if (!(data_info[info_row] & valid_mask) || !((data_info[info_row] & tag_mask) == tag)) {
+            data[data_row] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2)];
+            data[data_row + 1] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2) + 1];
+            data[data_row + 2] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2) + 2];
+            data[data_row + 3] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2) + 3];
+            data_info[info_row] = 0x0;
+            data_info[info_row] |= valid_mask;
+            data_info[info_row] |= tag;
+            *cycle_count += 50;
+        }
+        registers[rt] = data[((registers[rs] + offset) >> 2) % 16];
+    } else if (mode == 1) {
+        unsigned int search_mask       = 0x0000103F;
+        unsigned int row_mask          = 0x00000001;
+        unsigned int first_tag_mask    = 0x003F0000;
+        unsigned int first_valid_mask  = 0x10000000;
+        unsigned int second_tag_mask   = 0x0000003F;
+        unsigned int second_valid_mask = 0x00001000;
+        unsigned int first_untag_mask  = 0x1100113F;
+        unsigned int second_untag_mask = 0x113F1100;
+        unsigned int word_mask         = 0x00000003;
+        unsigned int first_lru_mask    = 0x01000000;
+        unsigned int second_lru_mask   = 0x00000100;
+        unsigned int unset_lru_mask    = 0x103F103F;
+        unsigned int info_row = ((registers[rs] + offset) >> 4) & row_mask;
+        unsigned int tag = ((registers[rs] + offset) >> 5) & second_tag_mask;
+        unsigned int data_row = info_row << 3;
+        unsigned int search = 0x0;
+        if ((ram_start + (((registers[rs] + offset) >> 4) << 2) + 3) > (RAM_SIZE >> 2)) {
+            WINDOW *error_window = newwin(5, 35, 10, 25);
+            refresh();
+            box(error_window, 0, 0);
+            mvwprintw(error_window, 2, 10, "Invalid address!");
+            wrefresh(error_window);
+            wgetch(error_window);
+            wclear(error_window);
+            wrefresh(error_window);
+            delwin(error_window);
+            locked = 1;
+        } else if (!(data_info[info_row] & first_valid_mask)) {
+            if (!(data_info[info_row] & second_valid_mask) || ((data_info[info_row] & second_valid_mask) && !((data_info[info_row] & second_tag_mask) == tag))) {
                 data[data_row] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2)];
                 data[data_row + 1] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2) + 1];
                 data[data_row + 2] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2) + 2];
                 data[data_row + 3] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2) + 3];
-                data_info[info_row] = 0x0;
-                data_info[info_row] |= valid_mask;
-                data_info[info_row] |= tag;
+                data_info[info_row] &= first_untag_mask;
+                data_info[info_row] |= first_valid_mask;
+                data_info[info_row] |= (tag << 16);
+                *cycle_count += 50;
             }
-            break;
+        } else if ((data_info[info_row] & first_valid_mask) && !((data_info[info_row] & first_tag_mask) == (tag << 16))) {
+            if (!(data_info[info_row] & second_valid_mask)) {
+                data[data_row + 4] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2)];
+                data[data_row + 5] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2) + 1];
+                data[data_row + 6] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2) + 2];
+                data[data_row + 7] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2) + 3];
+                data_info[info_row] &= second_untag_mask;
+                data_info[info_row] |= second_valid_mask;
+                data_info[info_row] |= tag;
+                *cycle_count += 50;
+            } else if ((data_info[info_row] & second_valid_mask) && !((data_info[info_row] & second_tag_mask) == tag)) {
+                if (!(data_info[info_row] & first_lru_mask)) {
+                    data[data_row] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2)];
+                    data[data_row + 1] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2) + 1];
+                    data[data_row + 2] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2) + 2];
+                    data[data_row + 3] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2) + 3];
+                    data_info[info_row] &= first_untag_mask;
+                    data_info[info_row] |= first_valid_mask;
+                    data_info[info_row] |= (tag << 16);
+                    *cycle_count += 50;
+                } else {
+                    data[data_row + 4] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2)];
+                    data[data_row + 5] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2) + 1];
+                    data[data_row + 6] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2) + 2];
+                    data[data_row + 7] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2) + 3];
+                    data_info[info_row] &= second_untag_mask;
+                    data_info[info_row] |= second_valid_mask;
+                    data_info[info_row] |= tag;
+                    *cycle_count += 50;
+                }
+            }
+        }
+        if ((search = tag | second_valid_mask) == (data_info[info_row] & search_mask)) {
+            registers[rt] = data[(info_row << 3) + (((registers[rs] + offset) >> 2) & word_mask) + 4];
+            data_info[info_row] &= unset_lru_mask;
+            data_info[info_row] |= second_lru_mask;
+        } else {
+            registers[rt] = data[(info_row << 3) + (((registers[rs] + offset) >> 2) & word_mask)];
+            data_info[info_row] &= unset_lru_mask;
+            data_info[info_row] |= first_lru_mask;
+        }
     }
-    registers[rt] = data[((registers[rs] + offset) >> 2) % 16];
     return locked;
 }
 
@@ -410,24 +489,33 @@ void mips_shift_left () {
 void mips_shift_right () {
 }
 
-void fetch (unsigned int *pc, unsigned int mode, unsigned int *ram, unsigned int *ram_info, unsigned int *data, unsigned int *data_info, unsigned int *text, unsigned int *text_info) {
+void fetch (unsigned int *cycle_count, unsigned int *pc, unsigned int mode, unsigned int *ram, unsigned int *ram_info, unsigned int *data, unsigned int *data_info, unsigned int *text, unsigned int *text_info) {
     unsigned int row_mask   = 0x3;
     unsigned int tag_mask   = 0x3F;
     unsigned int valid_mask = 0x10000000;
     unsigned int info_row = (*pc >> 4) & row_mask;
     unsigned int tag = (*pc >> 6) & tag_mask;
     unsigned int text_row = info_row << 2;
-    switch (mode) {
-        case 0:
-            if (!(text_info[info_row] & valid_mask) || !((text_info[info_row] & tag_mask) == tag)) {
-                text[text_row] = ram[(*pc >> 2)];
-                text[text_row + 1] = ram[(*pc >> 2) + 1];
-                text[text_row + 2] = ram[(*pc >> 2) + 2];
-                text[text_row + 3] = ram[(*pc >> 2) + 3];
-                text_info[info_row] |= valid_mask;
-                text_info[info_row] |= tag;
-            }
-            break;
+    if (mode == 0) {
+        if (!(text_info[info_row] & valid_mask) || !((text_info[info_row] & tag_mask) == tag)) {
+            text[text_row] = ram[(*pc >> 2)];
+            text[text_row + 1] = ram[(*pc >> 2) + 1];
+            text[text_row + 2] = ram[(*pc >> 2) + 2];
+            text[text_row + 3] = ram[(*pc >> 2) + 3];
+            text_info[info_row] |= valid_mask;
+            text_info[info_row] |= tag;
+            *cycle_count += 50;
+        }
+    } else if (mode == 1) {
+        if (!(text_info[info_row] & valid_mask) || !((text_info[info_row] & tag_mask) == tag)) {
+            text[text_row] = ram[(*pc >> 2)];
+            text[text_row + 1] = ram[(*pc >> 2) + 1];
+            text[text_row + 2] = ram[(*pc >> 2) + 2];
+            text[text_row + 3] = ram[(*pc >> 2) + 3];
+            text_info[info_row] |= valid_mask;
+            text_info[info_row] |= tag;
+            *cycle_count += 50;
+        }
     }
 }
 
@@ -522,8 +610,8 @@ int decode_execute (unsigned int mode, unsigned int *cycle_count, unsigned int *
         rt = mc & rt_mask;
         rt = rt >> 16;
         offset = mc & offset_mask;
-        locked = mips_load_word(mode, rs, rt, offset, registers, data, data_info, ram, ram_info, ram_start);
-        *cycle_count += 51;
+        locked = mips_load_word(cycle_count, mode, rs, rt, offset, registers, data, data_info, ram, ram_info, ram_start);
+        (*cycle_count)++;
     }
     return locked;
 }

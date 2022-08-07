@@ -4,7 +4,7 @@
  * 3  - RAM as a vector of integers and copy program to RAM = 5% DONE
  * 4  - Instruction validation in RAM = 10% DONE
  * 5  - Directly mapped cache, 4 sets, 1 word per block = 5%
- * 6  - Two way associative chace, 4, sets, 1 word per block = 10%
+ * 6  - Two way associative cache, 4, sets, 1 word per block = 10%
  * 7  - Modify item 6 to support 4 words per block = 10%
  * 8  - Modify item 6 to support user inputted set number = 10%
  * 9  - RAM + Cache = 10%
@@ -26,7 +26,7 @@ int main () {
     unsigned int ram_count = 0;
     FILE *file = NULL;
     char assy[LENGHT] = "\0";
-    int input;
+    int input = '\0';
     int locked = 0;
     unsigned int cycle_count = 0x0;
     unsigned int mc = 0x0;
@@ -93,6 +93,23 @@ int main () {
                     break;
                 // run
                 case 'r':
+                    while (!locked) {
+                        if (locked) {
+                            WINDOW *error_window = newwin(5, 35, 10, 25);
+                            refresh();
+                            box(error_window, 0, 0);
+                            mvwprintw(error_window, 2, 10, "Reset first!");
+                            wrefresh(error_window);
+                            wgetch(error_window);
+                            wclear(error_window);
+                            wrefresh(error_window);
+                            delwin(error_window);
+                        } else {
+                            fetch(&cycle_count, &pc, mode, ram, ram_info, data, data_info, text, text_info);
+                            locked = decode_execute(mode, &cycle_count, &pc, registers, text, text_info, data, data_info, ram, ram_info, ram_start);
+                        }
+                        refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text);
+                    }
                     break;
                 // step
                 case 's':
@@ -107,7 +124,7 @@ int main () {
                         wrefresh(error_window);
                         delwin(error_window);
                     } else {
-                        fetch(&pc, mode, ram, ram_info, data, data_info, text, text_info);
+                        fetch(&cycle_count, &pc, mode, ram, ram_info, data, data_info, text, text_info);
                         locked = decode_execute(mode, &cycle_count, &pc, registers, text, text_info, data, data_info, ram, ram_info, ram_start);
                     }
                     refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text);
@@ -116,24 +133,28 @@ int main () {
                 case 't':
                     locked = 0;
                     pc = 0;
+                    cycle_count = 0;
                     for (int i = 0; i < 32; i++) {
                         registers[i] = 0x0;
                     }
                     for (int i = 0; i < RAM_SIZE; i++) {
                         ram[i] = 0x0;
+                        ram_info[i] = 0x0;
                     }
                     for (int i = 0; i < DATA_SIZE; i++) {
                         data[i] = 0x0;
+                        data_info[i] = 0x0;
                     }
                     for (int i = 0; i < TEXT_SIZE; i++) {
                         text[i] = 0x0;
+                        text_info[i] = 0x0;
                     }
                     refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text);
                     break;
                 // mode
                 case 'm':
                     mode += 1;
-                    if (mode >= 5) {
+                    if (mode >= 2) {
                         mode = 0;
                     }
                     refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text);
@@ -151,10 +172,6 @@ int main () {
                         refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text);
                     }
                     break;
-                // for debugging purposes
-                case 'd':
-                        refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram_info, scroll, registers_window, registers, text_window, text);
-                        break;
             }
         }
     }
