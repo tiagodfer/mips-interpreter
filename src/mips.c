@@ -406,11 +406,12 @@ int cycle (unsigned int *cycle_count, unsigned int *pc, unsigned int *op, unsign
     unsigned int offset_mask = 0xFFFF;
     unsigned int mc = text[*pc >> 2];
     *pc += 4;
+    
+    op = mc & op_mask;
+    if (op == 0x0) {
+        funct = mc & funct_mask; // example: A & 9 = 1010 & 1001 = 1000 ou 8
+        if (funct == 0x0) {
 
-    *op = mc & op_mask;
-    if (*op == 0x0) {
-        *funct = mc & funct_mask;
-        if (*funct == 0x0) {
             WINDOW *nop_window = newwin(5, 35, 10, 25);
             refresh();
             box(nop_window, 0, 0);

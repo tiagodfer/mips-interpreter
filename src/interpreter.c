@@ -48,10 +48,11 @@ int main () {
     unsigned int registers[32] = {0x0};
     unsigned int text[TEXT_SIZE] = {0x0};
     unsigned int text_info[TEXT_SIZE] = {0x0};
+    unsigned int miss = 0x0;
     unsigned int scroll = 0x0;
-    initscr();
-    keypad(stdscr, TRUE);
-    noecho();
+    initscr(); // initializes a screen on terminal & sets up memory and clears the screen 
+    keypad(stdscr, TRUE); // enables the keypad of the user's terminal (TRUE) The user can press a function key (such as an arrow key) and wgetch returns a single value representing the function key, as in KEY_LEFT
+    noecho(); 
     cbreak();
     curs_set(0);
     WINDOW *cycle_window = newwin(3, 12, 1, 13);
@@ -61,9 +62,10 @@ int main () {
     WINDOW *ram_window = newwin(24, 19, 1, 63);
     WINDOW *registers_window = newwin(18, 25, 4, 0);
     WINDOW *text_window = newwin(18, 19, 1, 25);
-    refresh();
-    mvprintw(0, 10, "%s", "(M)ODE - (L)OAD - (R)UN - (S)TEP - RESE(T) - (E)XIT");
-    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text);
+    WINDOW *miss_window = newwin(6, 38, 19, 25);
+    refresh(); // refreshes screen to match whats in memory
+    mvprintw(0, 10, "%s", "(M)ODE - (L)OAD - (R)UN - (S)TEP - RESE(T) - (E)XIT"); //prints a string to a window: mvprintw( Line,  Column, Format, [Content ...])
+    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss);
     while (input != 'e') {
         if (kbhit()) {
             input = getch();
@@ -104,7 +106,7 @@ int main () {
                         case 4:
                             break;
                     }
-                    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text);
+                    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss);
                     break;
                 case 'r':
                     break;
@@ -122,7 +124,7 @@ int main () {
                     } else {
                         locked = step(&cycle_count, &pc, &op, &rs, &rt, &rd, &target, &immediate, &shamt, &funct, &offset, data, registers, text);
                     }
-                    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text);
+                    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss);
                     break;
                 case 't':
                     locked = 0;
@@ -139,26 +141,31 @@ int main () {
                     for (int i = 0; i < TEXT_SIZE; i++) {
                         text[i] = 0x0;
                     }
-                    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text);
+                    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss);
                     break;
                 case 'm':
                     mode += 1;
                     if (mode >= 5) {
                         mode = 0;
                     }
-                    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text);
+                    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss);
+                // up
                 case KEY_UP:
                     if (scroll > 0) {
                         scroll -= 4;
-                        refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text);
+                        refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss);
                     }
                     break;
                 case KEY_DOWN:
                     if (scroll < (RAM_SIZE - 0x54)) {
                         scroll += 4;
-                        refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text);
+                        refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss);
                     }
                     break;
+                // for debugging purposes
+                case 'd':
+                        refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram_info, scroll, registers_window, registers, text_window, text, miss_window, miss);
+                        break;
             }
         }
     }

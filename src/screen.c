@@ -280,6 +280,14 @@ void text_values (WINDOW *window, unsigned int *values) {
     */
 }
 
+void miss_labels(WINDOW *window){
+    mvwprintw(window, 0, 17, "MISS");
+}
+
+void miss_value (WINDOW *window, unsigned int value) {
+    mvwprintw(window, 1, 2, "%8X", value);
+}
+
 int kbhit () {
     int ch;
     int r;
@@ -295,7 +303,7 @@ int kbhit () {
     return r;
 }
 
-void refresh_windows (WINDOW *cycle_window, unsigned int cycle_count, WINDOW *data_window, unsigned int *data, WINDOW *mode_window, unsigned int mode, WINDOW *pc_window, unsigned int pc, WINDOW *ram_window, unsigned int *ram, unsigned int scroll, WINDOW *registers_window, unsigned int *registers, WINDOW *text_window, unsigned int *text) {
+void refresh_windows (WINDOW *cycle_window, unsigned int cycle_count, WINDOW *data_window, unsigned int *data, WINDOW *mode_window, unsigned int mode, WINDOW *pc_window, unsigned int pc, WINDOW *ram_window, unsigned int *ram, unsigned int scroll, WINDOW *registers_window, unsigned int *registers, WINDOW *text_window, unsigned int *text, WINDOW *miss_window, unsigned int *miss) {
     box(cycle_window, 0, 0);
     box(data_window, 0, 0);
     box(mode_window, 0, 0);
@@ -303,6 +311,7 @@ void refresh_windows (WINDOW *cycle_window, unsigned int cycle_count, WINDOW *da
     box(ram_window, 0, 0);
     box(registers_window, 0, 0);
     box(text_window, 0, 0);
+    box(miss_window, 0, 0);
     cycle_label(cycle_window);
     cycle_value(cycle_window, cycle_count);
     data_labels(data_window);
@@ -317,6 +326,8 @@ void refresh_windows (WINDOW *cycle_window, unsigned int cycle_count, WINDOW *da
     registers_values(registers_window, registers);
     text_labels(text_window);
     text_values(text_window, text);
+    miss_labels(miss_window);
+    miss_value(miss_window, miss);
     wrefresh(cycle_window);
     wrefresh(data_window);
     wrefresh(mode_window);
@@ -324,4 +335,5 @@ void refresh_windows (WINDOW *cycle_window, unsigned int cycle_count, WINDOW *da
     wrefresh(ram_window);
     wrefresh(registers_window);
     wrefresh(text_window);
+    wrefresh(miss_window);
 }
