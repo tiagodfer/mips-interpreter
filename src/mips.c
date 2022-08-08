@@ -353,6 +353,7 @@ int mips_load_word (unsigned int mode, unsigned int rs, unsigned int rt, unsigne
                 data_info[info_row] = 0x0;
                 data_info[info_row] |= valid_mask;
                 data_info[info_row] |= tag;
+                
             }
             break;
     }
@@ -524,7 +525,7 @@ int decode_execute (unsigned int mode, unsigned int *cycle_count, unsigned int *
         rt = rt >> 16;
         offset = mc & offset_mask;
         locked = mips_load_word(mode, rs, rt, offset, registers, data, data_info, ram, ram_info, ram_start);
-        *cycle_count += 51;
+        *cycle_count += 51; // pq 51?
     }
     return locked;
 }

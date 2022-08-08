@@ -285,7 +285,8 @@ void miss_labels(WINDOW *window){
 }
 
 void miss_value (WINDOW *window, unsigned int value) {
-    mvwprintw(window, 1, 2, "%8X", value);
+    mvwprintw(window, 2, 3, "Amout of miss: %d", value);
+    mvwprintw(window, 3, 3, "Percent of miss: ");
 }
 
 int kbhit () {
