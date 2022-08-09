@@ -106,10 +106,10 @@ int main () {
                             wrefresh(error_window);
                             delwin(error_window);
                         } else {
-                            fetch(&counters, &pc, mode, ram, ram_info, data, data_info, text, text_info);
-                            locked = decode_execute(mode, &counters, &pc, registers, text, text_info, data, data_info, ram, ram_info, ram_start);
+                            fetch(counters, &pc, mode, ram, ram_info, data, data_info, text, text_info);
+                            locked = decode_execute(mode, counters, &pc, registers, text, text_info, data, data_info, ram, ram_info, ram_start);
                         }
-                    refresh_windows(cycle_window, counters, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window);
+                        refresh_windows(cycle_window, counters, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window);
                     }
                     break;
                 // step
@@ -125,15 +125,18 @@ int main () {
                         wrefresh(error_window);
                         delwin(error_window);
                     } else {
-                        fetch(&counters, &pc, mode, ram, ram_info, data, data_info, text, text_info);
-                        locked = decode_execute(mode, &counters, &pc, registers, text, text_info, data, data_info, ram, ram_info, ram_start);
+                        fetch(counters, &pc, mode, ram, ram_info, data, data_info, text, text_info);
+                        locked = decode_execute(mode, counters, &pc, registers, text, text_info, data, data_info, ram, ram_info, ram_start);
                     }
+                    refresh_windows(cycle_window, counters, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window);
                     break;
                 // reset
                 case 't':
                     locked = 0;
                     pc = 0;
-                    cycle_count = 0;
+                    counters[0] = 0;
+                    counters[1] = 0;
+                    counters[2] = 0;
                     for (int i = 0; i < 32; i++) {
                         registers[i] = 0x0;
                     }

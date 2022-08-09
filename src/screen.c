@@ -253,12 +253,8 @@ void miss_labels(WINDOW *window){
 }
 
 void miss_value (WINDOW *window, unsigned int *values) {
-    double miss_percentage = 0.;
-    mvwprintw(window, 2, 3, "Amout of miss: %d", value[1]);
-    if(value[2] != 0){
-        miss_percentage = ((value[2] - value[1]) / value[2]) * 100; // calculating percentage
-    }
-    mvwprintw(window, 3, 3, "Percent of miss: %2.2f%%", miss_percentage);
+    mvwprintw(window, 2, 3, "Misses: %i", values[1]);
+    mvwprintw(window, 3, 3, "Hit percentage: %2.2f%%", ((values[2] - values[1]) * 100) / (float)values[2]);
 }
 
 int kbhit () {

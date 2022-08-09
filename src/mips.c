@@ -352,11 +352,11 @@ int mips_load_word (unsigned int *counters, unsigned int mode, unsigned int rs, 
             data_info[info_row] = 0x0;
             data_info[info_row] |= valid_mask;
             data_info[info_row] |= tag;
-            *counters[0] += 50;
+            counters[0] += 50;
             counters[1]++; //miss count
         }
         registers[rt] = data[((registers[rs] + offset) >> 2) % 16];
-        counters[2]++; // hit count
+        counters[2]++; // read count
     } else if (mode == 1) {
         unsigned int search_mask       = 0x0000103F;
         unsigned int row_mask          = 0x00000001;
@@ -394,7 +394,7 @@ int mips_load_word (unsigned int *counters, unsigned int mode, unsigned int rs, 
                 data_info[info_row] &= first_untag_mask;
                 data_info[info_row] |= first_valid_mask;
                 data_info[info_row] |= (tag << 16);
-                *counters[0] += 50;
+                counters[0] += 50;
                 counters[1]++;
             }
         } else if ((data_info[info_row] & first_valid_mask) && !((data_info[info_row] & first_tag_mask) == (tag << 16))) {
@@ -406,7 +406,7 @@ int mips_load_word (unsigned int *counters, unsigned int mode, unsigned int rs, 
                 data_info[info_row] &= second_untag_mask;
                 data_info[info_row] |= second_valid_mask;
                 data_info[info_row] |= tag;
-                *counters[0] += 50;
+                counters[0] += 50;
                 counters[1]++;
             } else if ((data_info[info_row] & second_valid_mask) && !((data_info[info_row] & second_tag_mask) == tag)) {
                 if (!(data_info[info_row] & first_lru_mask)) {
@@ -417,7 +417,7 @@ int mips_load_word (unsigned int *counters, unsigned int mode, unsigned int rs, 
                     data_info[info_row] &= first_untag_mask;
                     data_info[info_row] |= first_valid_mask;
                     data_info[info_row] |= (tag << 16);
-                    *counters[0] += 50;
+                    counters[0] += 50;
                     counters[1]++;
                 } else {
                     data[data_row + 4] = ram[ram_start + (((registers[rs] + offset) >> 4) << 2)];
@@ -427,11 +427,10 @@ int mips_load_word (unsigned int *counters, unsigned int mode, unsigned int rs, 
                     data_info[info_row] &= second_untag_mask;
                     data_info[info_row] |= second_valid_mask;
                     data_info[info_row] |= tag;
-                    *counters[0] += 50;
+                    counters[0] += 50;
                     counters[1]++;
                 }
             }
-            counters[2]++;
         }
         if ((search = tag | second_valid_mask) == (data_info[info_row] & search_mask)) {
             registers[rt] = data[(info_row << 3) + (((registers[rs] + offset) >> 2) & word_mask) + 4];
@@ -442,6 +441,7 @@ int mips_load_word (unsigned int *counters, unsigned int mode, unsigned int rs, 
             data_info[info_row] &= unset_lru_mask;
             data_info[info_row] |= first_lru_mask;
         }
+        counters[2]++;
     }
     return locked;
 }
@@ -511,7 +511,7 @@ void fetch (unsigned int *counters, unsigned int *pc, unsigned int mode, unsigne
             text[text_row + 3] = ram[(*pc >> 2) + 3];
             text_info[info_row] |= valid_mask;
             text_info[info_row] |= tag;
-            *counters[0] += 50;
+            counters[0] += 50;
             counters[1]++;
         }
     } else if (mode == 1) {
@@ -522,7 +522,7 @@ void fetch (unsigned int *counters, unsigned int *pc, unsigned int mode, unsigne
             text[text_row + 3] = ram[(*pc >> 2) + 3];
             text_info[info_row] |= valid_mask;
             text_info[info_row] |= tag;
-            *counters[0] += 50;
+            counters[0] += 50;
             counters[1]++;
         }
     }
@@ -574,7 +574,7 @@ int decode_execute (unsigned int mode, unsigned int *counters, unsigned int *pc,
             rd = mc & rd_mask;
             rd = rd >> 11;
             mips_add(rs, rt, rd, registers);
-            (*counters[0])++;
+            counters[0]++;
         } else if (funct == 0x22) {
             rs = mc & rs_mask;
             rs = rs >> 21;
@@ -583,7 +583,7 @@ int decode_execute (unsigned int mode, unsigned int *counters, unsigned int *pc,
             rd = mc & rd_mask;
             rd = rd >> 11;
             mips_sub(rs, rt, rd, registers);
-            (*counters[0])++;
+            counters[0]++;
         } else if (funct == 0x2A) {
             rs = mc & rs_mask;
             rs = rs >> 21;
@@ -592,12 +592,12 @@ int decode_execute (unsigned int mode, unsigned int *counters, unsigned int *pc,
             rd = mc & rd_mask;
             rd = rd >> 11;
             mips_set_on_less_than(rs, rt, rd, registers);
-            (*counters[0])++;
+            counters[0]++;
         }
     } else if (op == 0x8000000) {
         target = mc & target_mask;
         mips_jump(pc, target);
-        (*counters[0])++;
+        counters[0]++;
     } else if (op == 0x10000000) {
         rs = mc & rs_mask;
         rs = rs >> 21;
@@ -605,7 +605,7 @@ int decode_execute (unsigned int mode, unsigned int *counters, unsigned int *pc,
         rt = rt >> 16;
         offset = mc & offset_mask;
         mips_branch_on_equal(pc, rs, rt, offset, registers);
-        (*counters[0])++;
+        counters[0]++;
     } else if (op == 0x20000000) {
         rs = mc & rs_mask;
         rs = rs >> 21;
@@ -613,7 +613,7 @@ int decode_execute (unsigned int mode, unsigned int *counters, unsigned int *pc,
         rt = rt >> 16;
         immediate = mc & immediate_mask;
         mips_add_immediate(rs, rt, immediate, registers);
-        (*counters[0])++;
+        counters[0]++;
     } else if (op == 0x8C000000) {
         rs = mc & rs_mask;
         rs = rs >> 21;
@@ -621,7 +621,7 @@ int decode_execute (unsigned int mode, unsigned int *counters, unsigned int *pc,
         rt = rt >> 16;
         offset = mc & offset_mask;
         locked = mips_load_word(counters, mode, rs, rt, offset, registers, data, data_info, ram, ram_info, ram_start);
-        (*counters[0])++;
+        counters[0]++;
     }
     return locked;
 }

@@ -13,6 +13,6 @@ void registers_values (WINDOW *window, unsigned int *values);
 void text_labels (WINDOW *window);
 void text_values (WINDOW *window, unsigned int *values);
 void miss_labels (WINDOW *window);
-void miss_values (WINDOW *window, unsgined int *values);
+void miss_values (WINDOW *window, unsigned int *values);
 int kbhit ();
 void refresh_windows (WINDOW *cycle_window, unsigned int *counters, WINDOW *data_window, unsigned int *data, WINDOW *mode_window, unsigned int mode, WINDOW *pc_window, unsigned int pc, WINDOW *ram_window, unsigned int *ram, unsigned int scroll, WINDOW *registers_window, unsigned int *registers, WINDOW *text_window, unsigned int *text, WINDOW *miss_window);
