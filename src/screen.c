@@ -6,8 +6,8 @@ void cycle_label (WINDOW *window) {
     mvwprintw(window, 0, 3, "%s", "CYCLES");
 }
 
-void cycle_value (WINDOW *window, unsigned int value) {
-    mvwprintw(window, 1, 2, "%8X", value);
+void cycle_value (WINDOW *window, unsigned int *values) {
+    mvwprintw(window, 1, 2, "%8X", values[0]);
 }
 
 void data_labels (WINDOW *window) {
@@ -28,14 +28,6 @@ void data_labels (WINDOW *window) {
     mvwprintw(window, 14, 1, "%-8s", "34");
     mvwprintw(window, 15, 1, "%-8s", "38");
     mvwprintw(window, 16, 1, "%-8s", "3C");
-    /*
-    mvwprintw(window, 17, 1, "%-8s", "40");
-    mvwprintw(window, 18, 1, "%-8s", "44");
-    mvwprintw(window, 19, 1, "%-8s", "48");
-    mvwprintw(window, 20, 1, "%-8s", "4C");
-    mvwprintw(window, 21, 1, "%-8s", "50");
-    mvwprintw(window, 22, 1, "%-8s", "54");
-    */
 }
 
 void data_values (WINDOW *window, unsigned int *values) {
@@ -55,14 +47,6 @@ void data_values (WINDOW *window, unsigned int *values) {
     mvwprintw(window, 14, 10, "%8X", values[13]);
     mvwprintw(window, 15, 10, "%8X", values[14]);
     mvwprintw(window, 16, 10, "%8X", values[15]);
-    /*
-    mvwprintw(window, 17, 10, "%8X", values[16]);
-    mvwprintw(window, 18, 10, "%8X", values[17]);
-    mvwprintw(window, 19, 10, "%8X", values[18]);
-    mvwprintw(window, 20, 10, "%8X", values[19]);
-    mvwprintw(window, 21, 10, "%8X", values[20]);
-    mvwprintw(window, 22, 10, "%8X", values[21]);
-    */
 }
 
 void mode_label (WINDOW *window) {
@@ -243,14 +227,6 @@ void text_labels (WINDOW *window) {
     mvwprintw(window, 14, 1, "%-8s", "34");
     mvwprintw(window, 15, 1, "%-8s", "38");
     mvwprintw(window, 16, 1, "%-8s", "3C");
-    /*
-    mvwprintw(window, 17, 1, "%-8s", "40");
-    mvwprintw(window, 18, 1, "%-8s", "44");
-    mvwprintw(window, 19, 1, "%-8s", "48");
-    mvwprintw(window, 20, 1, "%-8s", "4C");
-    mvwprintw(window, 21, 1, "%-8s", "50");
-    mvwprintw(window, 22, 1, "%-8s", "54");
-    */
 }
 
 void text_values (WINDOW *window, unsigned int *values) {
@@ -270,14 +246,19 @@ void text_values (WINDOW *window, unsigned int *values) {
     mvwprintw(window, 14, 10, "%8X", values[13]);
     mvwprintw(window, 15, 10, "%8X", values[14]);
     mvwprintw(window, 16, 10, "%8X", values[15]);
-    /*
-    mvwprintw(window, 17, 10, "%8X", values[16]);
-    mvwprintw(window, 18, 10, "%8X", values[17]);
-    mvwprintw(window, 19, 10, "%8X", values[18]);
-    mvwprintw(window, 20, 10, "%8X", values[19]);
-    mvwprintw(window, 21, 10, "%8X", values[20]);
-    mvwprintw(window, 22, 10, "%8X", values[21]);
-    */
+}
+
+void miss_labels(WINDOW *window){
+    mvwprintw(window, 0, 17, "MISS");
+}
+
+void miss_value (WINDOW *window, unsigned int *values) {
+    double miss_percentage = 0.;
+    mvwprintw(window, 2, 3, "Amout of miss: %d", value[1]);
+    if(value[2] != 0){
+        miss_percentage = ((value[2] - value[1]) / value[2]) * 100; // calculating percentage
+    }
+    mvwprintw(window, 3, 3, "Percent of miss: %2.2f%%", miss_percentage);
 }
 
 int kbhit () {
@@ -295,7 +276,7 @@ int kbhit () {
     return r;
 }
 
-void refresh_windows (WINDOW *cycle_window, unsigned int cycle_count, WINDOW *data_window, unsigned int *data, WINDOW *mode_window, unsigned int mode, WINDOW *pc_window, unsigned int pc, WINDOW *ram_window, unsigned int *ram, unsigned int scroll, WINDOW *registers_window, unsigned int *registers, WINDOW *text_window, unsigned int *text) {
+void refresh_windows (WINDOW *cycle_window, unsigned int *counters, WINDOW *data_window, unsigned int *data, WINDOW *mode_window, unsigned int mode, WINDOW *pc_window, unsigned int pc, WINDOW *ram_window, unsigned int *ram, unsigned int scroll, WINDOW *registers_window, unsigned int *registers, WINDOW *text_window, unsigned int *text, WINDOW *miss_window) {
     box(cycle_window, 0, 0);
     box(data_window, 0, 0);
     box(mode_window, 0, 0);
@@ -303,8 +284,9 @@ void refresh_windows (WINDOW *cycle_window, unsigned int cycle_count, WINDOW *da
     box(ram_window, 0, 0);
     box(registers_window, 0, 0);
     box(text_window, 0, 0);
+    box(miss_window, 0, 0);
     cycle_label(cycle_window);
-    cycle_value(cycle_window, cycle_count);
+    cycle_value(cycle_window, counters);
     data_labels(data_window);
     data_values(data_window, data);
     mode_label(mode_window);
@@ -317,6 +299,8 @@ void refresh_windows (WINDOW *cycle_window, unsigned int cycle_count, WINDOW *da
     registers_values(registers_window, registers);
     text_labels(text_window);
     text_values(text_window, text);
+    miss_labels(miss_window);
+    miss_value(miss_window, counters);
     wrefresh(cycle_window);
     wrefresh(data_window);
     wrefresh(mode_window);
@@ -324,4 +308,5 @@ void refresh_windows (WINDOW *cycle_window, unsigned int cycle_count, WINDOW *da
     wrefresh(ram_window);
     wrefresh(registers_window);
     wrefresh(text_window);
+    wrefresh(miss_window);
 }

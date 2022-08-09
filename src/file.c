@@ -2,8 +2,8 @@
 #include <string.h>
 #include <ncurses.h>
 #include "file.h"
+#include "constants.h"
 
-#define LENGHT 100
 
 FILE *file_read () {
     FILE *file;
