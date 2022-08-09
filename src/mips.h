@@ -8,7 +8,7 @@ unsigned int i_assembler (char *assy);
 unsigned int lwsw_assembler (char *assy);
 unsigned int j_assembler (char *assy);
 unsigned int assembler (char *assy);
-int mips_load_word (unsigned int mode, unsigned int rs, unsigned int rt, unsigned int offset, unsigned int *registers, unsigned int *data, unsigned int *data_info, unsigned int *ram, unsigned int *ram_info, unsigned int ram_start);
+int mips_load_word (unsigned int *cycle_count, unsigned int mode, unsigned int rs, unsigned int rt, unsigned int offset, unsigned int *registers, unsigned int *data, unsigned int *data_info, unsigned int *ram, unsigned int *ram_info, unsigned int ram_start, unsigned int miss_count[]);
 void mips_store_word ();
 void mips_branch_on_equal (unsigned int *pc, unsigned int rs, unsigned int rt, int offset, unsigned int *registers);
 void mips_add (unsigned int rs, unsigned int rt, unsigned int rd, unsigned int *registers); //adds rs and rt, storing this sum in rd
@@ -22,5 +22,5 @@ void mips_jump ();
 void mips_jump_register ();
 void mips_shift_left ();
 void mips_shift_right ();
-void fetch (unsigned int *pc, unsigned int mode, unsigned int *ram, unsigned int *ram_info, unsigned int *data, unsigned int *data_info, unsigned int *text, unsigned int *text_info);
-int decode_execute (unsigned int mode, unsigned int *cycle_count, unsigned int *pc, unsigned int *registers, unsigned int *text, unsigned int *text_info, unsigned int *data, unsigned int *data_info, unsigned int *ram, unsigned int *ram_info, unsigned int ram_start);
+void fetch (unsigned int *cycle_count, unsigned int *pc, unsigned int mode, unsigned int *ram, unsigned int *ram_info, unsigned int *data, unsigned int *data_info, unsigned int *text, unsigned int *text_info, unsigned int *miss_count);
+int decode_execute (unsigned int mode, unsigned int *cycle_count, unsigned int *pc, unsigned int *registers, unsigned int *text, unsigned int *text_info, unsigned int *data, unsigned int *data_info, unsigned int *ram, unsigned int *ram_info, unsigned int ram_start, unsigned int *miss_count);

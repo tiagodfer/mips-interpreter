@@ -284,9 +284,14 @@ void miss_labels(WINDOW *window){
     mvwprintw(window, 0, 17, "MISS");
 }
 
-void miss_value (WINDOW *window, unsigned int value) {
-    mvwprintw(window, 2, 3, "Amout of miss: %d", value);
-    mvwprintw(window, 3, 3, "Percent of miss: ");
+void miss_value (WINDOW *window, unsigned int *value) {
+    double miss_percent = 0.;
+    mvwprintw(window, 2, 3, "Amout of miss: %d", value[0]);
+    if(value[1] != 0 || value[0] != 0){
+        miss_percent = (value[1] + value[0]);
+        miss_percent = (value[0] / miss_percent) * 100; // calculating percentagev
+    }
+    mvwprintw(window, 3, 3, "Percent of miss: %2.2f%%", miss_percent);
 }
 
 int kbhit () {
@@ -304,7 +309,7 @@ int kbhit () {
     return r;
 }
 
-void refresh_windows (WINDOW *cycle_window, unsigned int cycle_count, WINDOW *data_window, unsigned int *data, WINDOW *mode_window, unsigned int mode, WINDOW *pc_window, unsigned int pc, WINDOW *ram_window, unsigned int *ram, unsigned int scroll, WINDOW *registers_window, unsigned int *registers, WINDOW *text_window, unsigned int *text, WINDOW *miss_window, unsigned int *miss) {
+void refresh_windows (WINDOW *cycle_window, unsigned int cycle_count, WINDOW *data_window, unsigned int *data, WINDOW *mode_window, unsigned int mode, WINDOW *pc_window, unsigned int pc, WINDOW *ram_window, unsigned int *ram, unsigned int scroll, WINDOW *registers_window, unsigned int *registers, WINDOW *text_window, unsigned int *text, WINDOW *miss_window, unsigned int *miss_count) {
     box(cycle_window, 0, 0);
     box(data_window, 0, 0);
     box(mode_window, 0, 0);
@@ -328,7 +333,7 @@ void refresh_windows (WINDOW *cycle_window, unsigned int cycle_count, WINDOW *da
     text_labels(text_window);
     text_values(text_window, text);
     miss_labels(miss_window);
-    miss_value(miss_window, miss);
+    miss_value(miss_window, miss_count);
     wrefresh(cycle_window);
     wrefresh(data_window);
     wrefresh(mode_window);

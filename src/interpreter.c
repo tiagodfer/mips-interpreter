@@ -40,14 +40,14 @@ int main () {
     unsigned int registers[32] = {0x0};
     unsigned int text[TEXT_SIZE] = {0x0};
     unsigned int text_info[TEXT_SIZE] = {0x0};
-    unsigned int miss = 0x0;
+    unsigned int miss_count[2] = {0x0};
     unsigned int scroll = 0x0;
     initscr(); // initializes a screen on terminal & sets up memory and clears the screen 
-    keypad(stdscr, TRUE); // enables the keypad of the user's terminal (TRUE) The user can press a function key (such as an arrow key) and wgetch returns a single value representing the function key, as in KEY_LEFT
+    keypad(stdscr, TRUE); // up and down arrow to roll RAM window
     noecho(); 
     cbreak();
     curs_set(0);
-    WINDOW *cycle_window = newwin(3, 12, 1, 13);
+    WINDOW *cycle_window = newwin(3, 12, 1, 13); // newwin(height, widgth, start_y, start_x);
     WINDOW *data_window = newwin(18, 19, 1, 44);
     WINDOW *mode_window = newwin(3, 25, 22, 0);
     WINDOW *pc_window = newwin(3, 12, 1, 0);
@@ -57,10 +57,10 @@ int main () {
     WINDOW *miss_window = newwin(6, 38, 19, 25);
     refresh(); // refreshes screen to match whats in memory
     mvprintw(0, 10, "%s", "(M)ODE - (L)OAD - (R)UN - (S)TEP - RESE(T) - (E)XIT"); //prints a string to a window: mvprintw( Line,  Column, Format, [Content ...])
-    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss);
+    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss_count);
     while (input != 'e') {
         if (kbhit()) {
-            input = getch();
+            input = getch(); //whats for user input, returns char value of that key
             switch (input) {
                 // load
                 case 'l':
@@ -91,7 +91,7 @@ int main () {
                             }
                         }
                     }
-                    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss);
+                    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss_count);
                     break;
                 // run
                 case 'r':
@@ -103,16 +103,16 @@ int main () {
                         refresh();
                         box(error_window, 0, 0);
                         mvwprintw(error_window, 2, 10, "Reset first!");
-                        wrefresh(error_window);
+                        wrefresh(error_window); // refresh just a window
                         wgetch(error_window);
                         wclear(error_window);
                         wrefresh(error_window);
                         delwin(error_window);
                     } else {
-                        fetch(&pc, mode, ram, ram_info, data, data_info, text, text_info);
-                        locked = decode_execute(mode, &cycle_count, &pc, registers, text, text_info, data, data_info, ram, ram_info, ram_start);
+                        fetch(&cycle_count, &pc, mode, ram, ram_info, data, data_info, text, text_info, &miss_count);
+                        locked = decode_execute(mode, &cycle_count, &pc, registers, text, text_info, data, data_info, ram, ram_info, ram_start, &miss_count);
                     }
-                    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss);
+                    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss_count);
                     break;
                 // reset
                 case 't':
@@ -130,7 +130,7 @@ int main () {
                     for (int i = 0; i < TEXT_SIZE; i++) {
                         text[i] = 0x0;
                     }
-                    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss);
+                    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss_count);
                     break;
                 // mode
                 case 'm':
@@ -138,27 +138,27 @@ int main () {
                     if (mode >= 5) {
                         mode = 0;
                     }
-                    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss);
+                    refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss_count);
                 // up
                 case KEY_UP:
                     if (scroll > 0) {
                         scroll -= 4;
-                        refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss);
+                        refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss_count);
                     }
                     break;
                 // down
                 case KEY_DOWN:
                     if (scroll < (RAM_SIZE - 0x54)) {
                         scroll += 4;
-                        refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss);
+                        refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram, scroll, registers_window, registers, text_window, text, miss_window, miss_count);
                     }
                     break;
                 // for debugging purposes
                 case 'd':
-                        refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram_info, scroll, registers_window, registers, text_window, text, miss_window, miss);
+                        refresh_windows(cycle_window, cycle_count, data_window, data, mode_window, mode, pc_window, pc, ram_window, ram_info, scroll, registers_window, registers, text_window, text, miss_window, miss_count);
                         break;
             }
         }
     }
-    endwin();
+    endwin(); // deallocates memory and ends ncurses
 }
