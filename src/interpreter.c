@@ -28,7 +28,7 @@ int main () {
     char assy[LENGHT] = "\0";
     int input = '\0';
     int locked = 0;
-    unsigned int counters[3] = {0x0};
+    unsigned int counters[3] = {0x0}; // [0] = cycle, [1] miss, [2] reads
     unsigned int mc = 0x0;
     unsigned int data[DATA_SIZE] = {0x0};
     unsigned int data_info[DATA_SIZE] = {0x0};
