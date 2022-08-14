@@ -253,7 +253,7 @@ void miss_labels(WINDOW *window){
 }
 
 void miss_value (WINDOW *window, unsigned int *values) {
-    mvwprintw(window, 2, 3, "Misses: %i", values[1]);
+    mvwprintw(window, 2, 3, "Misses: %8i", values[1]);
     mvwprintw(window, 3, 3, "Hit percentage: %2.2f%%", ((values[2] - values[1]) * 100) / (float)values[2]);
 }
 

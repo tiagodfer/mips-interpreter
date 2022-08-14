@@ -4,7 +4,6 @@
 #include "file.h"
 #include "constants.h"
 
-
 FILE *file_read () {
     FILE *file;
     char file_name[LENGHT];

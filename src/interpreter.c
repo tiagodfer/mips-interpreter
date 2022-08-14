@@ -1,18 +1,3 @@
-/*
- * 1  - Run the specified program = 5% DONE
- * 2  - Convert MIPS Assembly to machine code = 10% DONE
- * 3  - RAM as a vector of integers and copy program to RAM = 5% DONE
- * 4  - Instruction validation in RAM = 10% DONE
- * 5  - Directly mapped cache, 4 sets, 1 word per block = 5%
- * 6  - Two way associative cache, 4, sets, 1 word per block = 10%
- * 7  - Modify item 6 to support 4 words per block = 10%
- * 8  - Modify item 6 to support user inputted set number = 10%
- * 9  - RAM + Cache = 10%
- * 10 - Run the specified program with RAM + Cache = 10%
- * 11 - UI = 5% DONE
- * 12 - Run the specified benchmarks = 10%
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
